@@ -2,7 +2,9 @@
 #include <WiFi.h>
 
 // REPLACE WITH YOUR RECEIVER MAC Address
-uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+//voice command A8:42:E3:48:55:48
+
+uint8_t broadcastAddress[] = {0xA8, 0x42, 0xE3, 0x48, 0x55, 0x48};
 
 esp_now_peer_info_t peerInfo;
 
@@ -13,9 +15,11 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 String jsonString;
+uint32_t interval = 0;
 
 void setup() {
   // Init Serial Monitor
+  pinMode(14, OUTPUT);
   Serial.begin(115200);
 
   // Set device as a Wi-Fi Station
@@ -46,9 +50,14 @@ void setup() {
 
 void loop() {
   // Set values to send
+  if ((millis() - interval) >= 1000) {
+    interval = millis();
+    digitalWrite(14, !digitalRead(14));
+  }
+
   if (Serial.available()) {
     jsonString = "";
-    
+
     while (Serial.available()) {
       // get the new byte:
       char inChar = (char)Serial.read();
@@ -56,7 +65,7 @@ void loop() {
       jsonString += inChar;
     }
 
-    serializeJson(sendDoc, jsonString);
+    Serial.println(jsonString);
     unsigned char buf[jsonString.length() + 1];
     jsonString.getBytes(buf, sizeof(buf));
 
